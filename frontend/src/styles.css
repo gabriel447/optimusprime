@@ -1,0 +1,73 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #0b1020;
+  color: #e6e9f2;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; }
+body { min-height: 100vh; }
+
+.card {
+  background: #141a30;
+  border: 1px solid #1f2744;
+  border-radius: 10px;
+  padding: 16px;
+  overflow: auto;
+}
+
+.card h2 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a93b2;
+}
+
+.price { font-size: 36px; font-weight: 700; }
+
+.pill {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
+  background: #1f2744; color: #9bb0ff;
+}
+.pill.green { background: #1e3a2b; color: #57d28c; }
+.pill.red   { background: #3a1e1e; color: #ff7a7a; }
+.pill.gray  { background: #2a2f45; color: #9aa1b8; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #1f2744; }
+th { color: #8a93b2; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.log-line { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; white-space: pre-wrap; }
+.log-line.warn  { color: #f2b64c; }
+.log-line.error { color: #ff7a7a; }
+.log-line.debug { color: #6c7694; }
+
+.led {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: 1px;
+  flex-shrink: 0;
+}
+.led-green {
+  background: #57d28c;
+  box-shadow: 0 0 6px rgba(87, 210, 140, 0.7), inset 0 0 2px rgba(255, 255, 255, 0.3);
+}
+.led-red {
+  background: #ff7a7a;
+  box-shadow: 0 0 6px rgba(255, 122, 122, 0.7), inset 0 0 2px rgba(255, 255, 255, 0.3);
+}
+.led-amber {
+  background: #f2b64c;
+  box-shadow: 0 0 6px rgba(242, 182, 76, 0.7), inset 0 0 2px rgba(255, 255, 255, 0.3);
+}
+.led.pulse { animation: led-pulse 1.6s ease-in-out infinite; }
+@keyframes led-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(0.9); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
