@@ -24,25 +24,16 @@ export interface TradeRecord {
 
 export interface ClosedTradeOutcome {
   trade: TradeRecord;
-  outcome: 'stop' | 'target' | 'manual' | 'expired';
+  outcome: 'stop' | 'target';
   closePrice: number;
   closedAt: number;
   pnlUsdt: number;
-}
-
-interface ShadowTracker {
-  tradeId: string;
-  direction: 'buy' | 'sell';
-  originalStop: number;
-  originalTarget: number;
-  entry: number;
 }
 
 export class OrderManager {
   private openTrade: TradeRecord | null = null;
   private candlesSinceEntry = 0;
   private breakevenApplied = false;
-  private shadow: ShadowTracker | null = null;
 
   constructor(
     private readonly exchange: BinanceClient,
@@ -138,21 +129,6 @@ export class OrderManager {
     return this.finalize(t, lastPrice, outcome, '[sim] ');
   }
 
-  async cancelTrade(lastPrice: number): Promise<ClosedTradeOutcome | null> {
-    if (!this.openTrade) return null;
-
-    const t = this.openTrade;
-
-    try {
-      await this.exchange.cancelOrder(t.stopOrder.id);
-    } catch { /* pode já ter sido preenchida */ }
-    try {
-      await this.exchange.cancelOrder(t.targetOrder.id);
-    } catch { /* pode já ter sido preenchida */ }
-
-    return this.finalize(t, lastPrice, 'manual', '[manual] ');
-  }
-
   async onCandleClosed(candle: Candle): Promise<ClosedTradeOutcome | null> {
     if (!this.openTrade) return null;
 
@@ -182,58 +158,7 @@ export class OrderManager {
       }
     }
 
-    if (env.TRADE_EXPIRY_CANDLES > 0 && this.candlesSinceEntry >= env.TRADE_EXPIRY_CANDLES) {
-      logger.info('orders', `trade expirado após ${this.candlesSinceEntry} candles — cancelando`);
-      return this.expireTrade(candle.close);
-    }
-
-    this.checkShadow(candle);
     return null;
-  }
-
-  private async expireTrade(lastPrice: number): Promise<ClosedTradeOutcome | null> {
-    if (!this.openTrade) return null;
-
-    const t = this.openTrade;
-
-    this.shadow = {
-      tradeId: t.id,
-      direction: t.direction,
-      originalStop: t.stop,
-      originalTarget: t.target,
-      entry: t.entry,
-    };
-
-    try {
-      await this.exchange.cancelOrder(t.stopOrder.id);
-    } catch {}
-    try {
-      await this.exchange.cancelOrder(t.targetOrder.id);
-    } catch {}
-
-    return this.finalize(t, lastPrice, 'expired', '[expired] ');
-  }
-
-  private checkShadow(candle: Candle): void {
-    if (!this.shadow) return;
-
-    const s = this.shadow;
-    const hitStop = s.direction === 'buy' ? candle.low <= s.originalStop : candle.high >= s.originalStop;
-    const hitTarget = s.direction === 'buy' ? candle.high >= s.originalTarget : candle.low <= s.originalTarget;
-
-    if (hitTarget) {
-      const pnl = s.direction === 'buy'
-        ? s.originalTarget - s.entry
-        : s.entry - s.originalTarget;
-      logger.warn('orders', `[shadow] trade ${s.tradeId} TERIA batido ALVO @ ${s.originalTarget} (P&L virtual: +${pnl.toFixed(2)})`);
-      this.shadow = null;
-    } else if (hitStop) {
-      const pnl = s.direction === 'buy'
-        ? s.originalStop - s.entry
-        : s.entry - s.originalStop;
-      logger.warn('orders', `[shadow] trade ${s.tradeId} TERIA batido STOP @ ${s.originalStop} (P&L virtual: ${pnl.toFixed(2)})`);
-      this.shadow = null;
-    }
   }
 
   hydrateOpenTrade(trade: TradeRecord, candlesSinceEntry = 0): void {
@@ -285,7 +210,7 @@ export class OrderManager {
   private finalize(
     trade: TradeRecord,
     closePrice: number,
-    outcome: 'stop' | 'target' | 'manual' | 'expired',
+    outcome: 'stop' | 'target',
     logPrefix: string,
   ): ClosedTradeOutcome {
     const closedAt = Date.now();

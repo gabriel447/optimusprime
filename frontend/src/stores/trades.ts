@@ -35,8 +35,8 @@ export const useTradesStore = defineStore('trades', {
         losses,
         openCount: list.filter((t) => t.status === 'open').length,
         winRate: closed.length > 0 ? wins / closed.length : 0,
-        bestTrade: pnls.length ? Math.max(...pnls) : 0,
-        worstTrade: pnls.length ? Math.min(...pnls) : 0,
+        bestTrade: Math.max(0, ...pnls),
+        worstTrade: Math.min(0, ...pnls),
       };
     },
 

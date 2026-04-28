@@ -49,11 +49,6 @@ async function main() {
     }
   }
 
-  server.setCancelTradeHandler(async () => {
-    const closed = await orders.cancelTrade(candles[candles.length - 1]?.close ?? 0);
-    if (closed) server.emitTradeClosed(closed.trade, closed.closePrice, closed.outcome, closed.pnlUsdt, closed.closedAt);
-  });
-
   server.emitStatus(true);
 
   marketStream.on('priceTick', (price: number) => {

@@ -43,7 +43,7 @@ export type StrategyName =
   | 'PRECO_REVERSAO';
 export type Direction = 'buy' | 'sell';
 export type TrendDirection = 'up' | 'down' | 'lateral';
-export type TradeOutcome = 'target' | 'stop' | 'manual';
+export type TradeOutcome = 'target' | 'stop';
 export type TradeStatus = 'open' | 'closed';
 
 export interface TradeLevels {

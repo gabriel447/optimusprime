@@ -8,7 +8,6 @@ const schema = z.object({
   TIMEFRAME: z.string().default('15m'),
   CANDLE_HISTORY_SIZE: z.coerce.number().int().positive().default(300),
   RISK_PER_TRADE_USDT: z.coerce.number().positive().default(25),
-  TRADE_EXPIRY_CANDLES: z.coerce.number().int().nonnegative().default(12),
   BREAKEVEN_AT_R: z.coerce.number().nonnegative().default(1),
   SERVER_PORT: z.coerce.number().int().positive().default(3001),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),

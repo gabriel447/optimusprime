@@ -56,7 +56,6 @@ const fmtDuration = (t: { openedAt: number; closedAt?: number | null }) =>
             <td>
               <span v-if="t.status === 'open'" class="pill gray">aberta</span>
               <span v-else-if="t.outcome === 'target'" class="pill green">alvo</span>
-              <span v-else-if="t.outcome === 'manual'" class="pill yellow">cancelada</span>
               <span v-else class="pill red">stop</span>
             </td>
             <td class="ts">{{ fmtDuration(t) }}</td>

@@ -13,7 +13,7 @@ export interface TradeView extends TradeRecord {
   status: 'open' | 'closed';
   closedAt?: number;
   closePrice?: number;
-  outcome?: 'stop' | 'target' | 'manual' | 'expired';
+  outcome?: 'stop' | 'target';
   pnlUsdt?: number;
 }
 
@@ -33,17 +33,13 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   'bot:requestSnapshot': () => void;
-  'bot:cancelTrade': (payload: { tradeId: string }) => void;
 }
-
-export type CancelTradeHandler = (tradeId: string) => Promise<void>;
 
 export class DashboardServer {
   private readonly app = express();
   private readonly http: HttpServer;
   private readonly io: SocketServer<ClientToServerEvents, ServerToClientEvents>;
   private readonly startedAt = Date.now();
-  private onCancelTrade: CancelTradeHandler | null = null;
 
   private snapshot: {
     price: number;
@@ -71,12 +67,6 @@ export class DashboardServer {
       logger.info('socket', `cliente conectado: ${socket.id}`);
       this.sendSnapshotTo(socket.id);
       socket.on('bot:requestSnapshot', () => this.sendSnapshotTo(socket.id));
-      socket.on('bot:cancelTrade', async ({ tradeId }) => {
-        if (this.onCancelTrade) {
-          try { await this.onCancelTrade(tradeId); }
-          catch (err) { logger.error('socket', 'falha ao cancelar trade', (err as Error).message); }
-        }
-      });
       socket.on('disconnect', () => logger.debug('socket', `cliente desconectado: ${socket.id}`));
     });
 
@@ -137,17 +127,13 @@ export class DashboardServer {
     this.io.emit('bot:signal', signal);
   }
 
-  setCancelTradeHandler(handler: CancelTradeHandler): void {
-    this.onCancelTrade = handler;
-  }
-
   emitTrade(trade: TradeRecord): void {
     const view: TradeView = { ...trade, status: 'open' };
     this.snapshot.trades.set(trade.id, view);
     this.io.emit('bot:trade', view);
   }
 
-  emitTradeClosed(trade: TradeRecord, closePrice: number, outcome: 'stop' | 'target' | 'manual' | 'expired', pnlUsdt: number, closedAt: number): void {
+  emitTradeClosed(trade: TradeRecord, closePrice: number, outcome: 'stop' | 'target', pnlUsdt: number, closedAt: number): void {
     const view: TradeView = { ...trade, status: 'closed', closePrice, outcome, pnlUsdt, closedAt };
     this.snapshot.trades.set(trade.id, view);
     this.io.emit('bot:tradeClosed', view);

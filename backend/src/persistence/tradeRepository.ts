@@ -19,7 +19,7 @@ export interface PersistedTrade {
   openedAt: number;
   closedAt: number | null;
   closePrice: number | null;
-  outcome: 'target' | 'stop' | 'manual' | 'expired' | null;
+  outcome: 'target' | 'stop' | null;
 }
 
 interface TradeRow {
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS trades (
   opened_at INTEGER NOT NULL,
   closed_at INTEGER,
   close_price REAL,
-  outcome TEXT CHECK(outcome IN ('target', 'stop', 'manual', 'expired'))
+  outcome TEXT CHECK(outcome IN ('target', 'stop'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_trades_opened_at ON trades(opened_at DESC);
@@ -117,7 +117,7 @@ export class TradeRepository {
       });
   }
 
-  close(id: string, closePrice: number, outcome: 'target' | 'stop' | 'manual' | 'expired', closedAt: number): void {
+  close(id: string, closePrice: number, outcome: 'target' | 'stop', closedAt: number): void {
     const result = this.db
       .prepare(
         `UPDATE trades
@@ -165,6 +165,6 @@ function rowToTrade(r: TradeRow): PersistedTrade {
     openedAt: r.opened_at,
     closedAt: r.closed_at,
     closePrice: r.close_price,
-    outcome: r.outcome as 'target' | 'stop' | 'manual' | 'expired' | null,
+    outcome: r.outcome as 'target' | 'stop' | null,
   };
 }

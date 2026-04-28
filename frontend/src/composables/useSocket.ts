@@ -36,14 +36,10 @@ export function useSocket() {
     return socket;
   }
 
-  function cancelTrade(tradeId: string) {
-    socket?.emit('bot:cancelTrade', { tradeId });
-  }
-
   function disconnect() {
     socket?.disconnect();
     socket = null;
   }
 
-  return { connect, disconnect, cancelTrade };
+  return { connect, disconnect };
 }
