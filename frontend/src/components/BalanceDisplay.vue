@@ -1,24 +1,50 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { computed } from 'vue';
 import { useBotStore } from '../stores/bot';
+import { useTradesStore } from '../stores/trades';
 
 const bot = useBotStore();
-const { balances } = storeToRefs(bot);
+const trades = useTradesStore();
+const { balances, status } = storeToRefs(bot);
+const { pnlAllTime } = storeToRefs(trades);
 
 const fmt = (v: number, digits = 4) =>
   v.toLocaleString('pt-BR', { maximumFractionDigits: digits, minimumFractionDigits: digits });
+
+const fmtSigned = (v: number) =>
+  (v >= 0 ? '+' : '') + fmt(v, 2);
+
+const quoteAsset = computed(() => status.value.symbol.split('/')[1] ?? 'USDT');
+
+const title = computed(() => (status.value.dryRun ? 'Saldo (DRY RUN)' : 'Saldo (Testnet)'));
 </script>
 
 <template>
   <section class="card balance-card">
-    <h2>Saldo (Testnet)</h2>
+    <h2>{{ title }}</h2>
 
     <div class="table-wrap">
       <table v-if="balances.length">
         <thead>
           <tr><th>Ativo</th><th>Livre</th><th>Em ordem</th><th>Total</th></tr>
         </thead>
-        <tbody>
+
+        <tbody v-if="status.dryRun">
+          <tr v-for="b in balances" :key="b.asset">
+            <td><strong>{{ b.asset }}</strong></td>
+            <td><span class="muted">∞</span></td>
+            <td>0</td>
+            <td v-if="b.asset === quoteAsset">
+              <strong :class="pnlAllTime >= 0 ? 'pos' : 'neg'">
+                {{ fmtSigned(pnlAllTime) }}
+              </strong>
+            </td>
+            <td v-else>0</td>
+          </tr>
+        </tbody>
+
+        <tbody v-else>
           <tr v-for="b in balances" :key="b.asset">
             <td><strong>{{ b.asset }}</strong></td>
             <td>{{ fmt(b.free) }}</td>
@@ -61,4 +87,7 @@ thead th {
 tbody td { padding: 10px 8px; }
 
 .empty { color: #6c7694; }
+.muted { color: #6c7694; }
+.pos { color: #57d28c; }
+.neg { color: #ff7a7a; }
 </style>
