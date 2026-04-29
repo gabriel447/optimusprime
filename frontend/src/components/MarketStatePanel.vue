@@ -82,14 +82,18 @@ const fmtDelta = (v: number) => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
       </div>
 
       <div class="ma-section">
-        <span class="ma-eyebrow">Médias móveis vs preço</span>
+        <span class="ma-eyebrow">Posição do preço vs médias</span>
         <div class="ma-row" v-for="m in mas" :key="m.name">
           <div class="ma-id">
             <span class="ma-name">{{ m.name }}</span>
             <span class="ma-role">{{ m.role }}</span>
           </div>
           <span class="ma-value">{{ fmt(m.value) }}</span>
-          <span class="ma-delta" :class="m.belowPrice ? 'pos' : 'neg'">
+          <span
+            class="ma-delta"
+            :class="m.belowPrice ? 'pos' : 'neg'"
+            :title="`Preço está ${m.belowPrice ? 'acima' : 'abaixo'} da ${m.name} em ${fmtDelta(m.deltaPct)}`"
+          >
             <span class="arrow">{{ m.belowPrice ? '↑' : '↓' }}</span>
             {{ fmtDelta(m.deltaPct) }}
           </span>

@@ -19,7 +19,7 @@ export interface PersistedTrade {
   openedAt: number;
   closedAt: number | null;
   closePrice: number | null;
-  outcome: 'target' | 'stop' | null;
+  outcome: 'target' | 'stop' | 'timeout' | null;
 }
 
 interface TradeRow {
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS trades (
   opened_at INTEGER NOT NULL,
   closed_at INTEGER,
   close_price REAL,
-  outcome TEXT CHECK(outcome IN ('target', 'stop'))
+  outcome TEXT CHECK(outcome IN ('target', 'stop', 'timeout'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_trades_opened_at ON trades(opened_at DESC);
@@ -84,6 +84,50 @@ export class TradeRepository {
     for (const sql of MIGRATIONS) {
       try { this.db.exec(sql); } catch { /* coluna já existe */ }
     }
+    this.migrateOutcomeCheck();
+  }
+
+  private migrateOutcomeCheck(): void {
+    const row = this.db
+      .prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='trades'`)
+      .get() as { sql: string } | undefined;
+    if (!row || row.sql.includes("'timeout'")) return;
+
+    this.db.exec(`
+      BEGIN TRANSACTION;
+      DROP INDEX IF EXISTS idx_trades_opened_at;
+      ALTER TABLE trades RENAME TO trades_old_outcome_v1;
+      CREATE TABLE trades (
+        id TEXT PRIMARY KEY,
+        strategy TEXT NOT NULL,
+        direction TEXT NOT NULL CHECK(direction IN ('buy', 'sell')),
+        entry REAL NOT NULL,
+        stop REAL NOT NULL,
+        target REAL NOT NULL,
+        amount REAL NOT NULL,
+        risk_usdt REAL NOT NULL,
+        entry_order_id TEXT,
+        stop_order_id TEXT,
+        target_order_id TEXT,
+        opened_at INTEGER NOT NULL,
+        closed_at INTEGER,
+        close_price REAL,
+        outcome TEXT CHECK(outcome IN ('target', 'stop', 'timeout'))
+      );
+      INSERT INTO trades
+        (id, strategy, direction, entry, stop, target, amount, risk_usdt,
+         entry_order_id, stop_order_id, target_order_id,
+         opened_at, closed_at, close_price, outcome)
+      SELECT
+        id, strategy, direction, entry, stop, target, amount, risk_usdt,
+        entry_order_id, stop_order_id, target_order_id,
+        opened_at, closed_at, close_price, outcome
+      FROM trades_old_outcome_v1;
+      DROP TABLE trades_old_outcome_v1;
+      CREATE INDEX IF NOT EXISTS idx_trades_opened_at ON trades(opened_at DESC);
+      COMMIT;
+    `);
+    logger.info('persistence', 'migração: outcome CHECK ampliado para incluir timeout');
   }
 
   insert(trade: PersistedTrade): void {
@@ -117,7 +161,7 @@ export class TradeRepository {
       });
   }
 
-  close(id: string, closePrice: number, outcome: 'target' | 'stop', closedAt: number): void {
+  close(id: string, closePrice: number, outcome: 'target' | 'stop' | 'timeout', closedAt: number): void {
     const result = this.db
       .prepare(
         `UPDATE trades
@@ -165,6 +209,6 @@ function rowToTrade(r: TradeRow): PersistedTrade {
     openedAt: r.opened_at,
     closedAt: r.closed_at,
     closePrice: r.close_price,
-    outcome: r.outcome as 'target' | 'stop' | null,
+    outcome: r.outcome as 'target' | 'stop' | 'timeout' | null,
   };
 }

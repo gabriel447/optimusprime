@@ -79,3 +79,6 @@ temp/
 
 # ------- Instruções privadas -------
 CLAUDE.md
+
+# ------- Config local de processos (caminhos absolutos da máquina) -------
+ecosystem.config.cjs

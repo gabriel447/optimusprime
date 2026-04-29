@@ -142,6 +142,39 @@ export class BinanceClient {
     return this.normalizeOrder(newStop as unknown as Record<string, unknown>, side);
   }
 
+  async closePositionAtMarket(params: {
+    side: 'buy' | 'sell';
+    amount: number;
+    stopOrderId: string;
+    targetOrderId: string;
+  }): Promise<OrderResult> {
+    const { side, amount, stopOrderId, targetOrderId } = params;
+    const closeSide: 'buy' | 'sell' = side === 'buy' ? 'sell' : 'buy';
+
+    if (env.DRY_RUN) {
+      logger.warn('exchange', 'DRY_RUN=true — fechamento a mercado simulado', params);
+      return {
+        id: `dry-close-${Date.now()}`, symbol: env.SYMBOL, side: closeSide, type: 'market',
+        amount, status: 'simulated', timestamp: Date.now(),
+      };
+    }
+
+    for (const [label, id] of [['stop', stopOrderId], ['target', targetOrderId]] as const) {
+      try {
+        await this.withRetry(`cancelOrder.${label}`, () =>
+          this.exchange.cancelOrder(id, env.SYMBOL),
+        );
+      } catch (err) {
+        logger.warn('exchange', `falha ao cancelar ${label} ${id} (já preenchida?)`, (err as Error).message);
+      }
+    }
+
+    const close = await this.withRetry('createOrder.close', () =>
+      this.exchange.createOrder(env.SYMBOL, 'market', closeSide, amount),
+    );
+    return this.normalizeOrder(close as unknown as Record<string, unknown>, closeSide);
+  }
+
   async cancelOrder(orderId: string): Promise<void> {
     if (env.DRY_RUN) {
       logger.warn('exchange', `DRY_RUN=true — cancelamento simulado da ordem ${orderId}`);

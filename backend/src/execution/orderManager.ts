@@ -24,7 +24,7 @@ export interface TradeRecord {
 
 export interface ClosedTradeOutcome {
   trade: TradeRecord;
-  outcome: 'stop' | 'target';
+  outcome: 'stop' | 'target' | 'timeout';
   closePrice: number;
   closedAt: number;
   pnlUsdt: number;
@@ -113,7 +113,7 @@ export class OrderManager {
     const matchTarget = event.orderId === t.targetOrder.id;
     if (!matchStop && !matchTarget) return null;
 
-    const outcome: 'stop' | 'target' = matchTarget ? 'target' : 'stop';
+    const outcome: 'stop' | 'target' | 'timeout' = matchTarget ? 'target' : 'stop';
     return this.finalize(t, event.price, outcome, '');
   }
 
@@ -125,7 +125,7 @@ export class OrderManager {
     const hitTarget = t.direction === 'buy' ? lastPrice >= t.target : lastPrice <= t.target;
     if (!hitStop && !hitTarget) return null;
 
-    const outcome: 'stop' | 'target' = hitTarget ? 'target' : 'stop';
+    const outcome: 'stop' | 'target' | 'timeout' = hitTarget ? 'target' : 'stop';
     return this.finalize(t, lastPrice, outcome, '[sim] ');
   }
 
@@ -155,6 +155,25 @@ export class OrderManager {
         } catch (err) {
           logger.error('orders', 'falha ao mover stop para breakeven', (err as Error).message);
         }
+      }
+    }
+
+    if (env.MAX_CANDLES_PER_TRADE > 0 && this.candlesSinceEntry >= env.MAX_CANDLES_PER_TRADE) {
+      try {
+        const close = await this.exchange.closePositionAtMarket({
+          side: t.direction,
+          amount: t.amount,
+          stopOrderId: t.stopOrder.id,
+          targetOrderId: t.targetOrder.id,
+        });
+        const closePrice = close.price ?? candle.close;
+        logger.warn(
+          'orders',
+          `timeout: ${this.candlesSinceEntry} candles sem stop/alvo — posição fechada a mercado @ ${closePrice}`,
+        );
+        return this.finalize(t, closePrice, 'timeout', '[timeout] ');
+      } catch (err) {
+        logger.error('orders', 'falha ao fechar posição por timeout', (err as Error).message);
       }
     }
 
@@ -210,7 +229,7 @@ export class OrderManager {
   private finalize(
     trade: TradeRecord,
     closePrice: number,
-    outcome: 'stop' | 'target',
+    outcome: 'stop' | 'target' | 'timeout',
     logPrefix: string,
   ): ClosedTradeOutcome {
     const closedAt = Date.now();

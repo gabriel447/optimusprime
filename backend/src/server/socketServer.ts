@@ -13,7 +13,7 @@ export interface TradeView extends TradeRecord {
   status: 'open' | 'closed';
   closedAt?: number;
   closePrice?: number;
-  outcome?: 'stop' | 'target';
+  outcome?: 'stop' | 'target' | 'timeout';
   pnlUsdt?: number;
 }
 
@@ -133,7 +133,7 @@ export class DashboardServer {
     this.io.emit('bot:trade', view);
   }
 
-  emitTradeClosed(trade: TradeRecord, closePrice: number, outcome: 'stop' | 'target', pnlUsdt: number, closedAt: number): void {
+  emitTradeClosed(trade: TradeRecord, closePrice: number, outcome: 'stop' | 'target' | 'timeout', pnlUsdt: number, closedAt: number): void {
     const view: TradeView = { ...trade, status: 'closed', closePrice, outcome, pnlUsdt, closedAt };
     this.snapshot.trades.set(trade.id, view);
     this.io.emit('bot:tradeClosed', view);

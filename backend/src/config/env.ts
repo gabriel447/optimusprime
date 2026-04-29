@@ -9,6 +9,7 @@ const schema = z.object({
   CANDLE_HISTORY_SIZE: z.coerce.number().int().positive().default(300),
   RISK_PER_TRADE_USDT: z.coerce.number().positive().default(25),
   BREAKEVEN_AT_R: z.coerce.number().nonnegative().default(1),
+  MAX_CANDLES_PER_TRADE: z.coerce.number().int().nonnegative().default(0),
   SERVER_PORT: z.coerce.number().int().positive().default(3001),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   DRY_RUN: z
