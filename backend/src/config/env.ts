@@ -16,6 +16,10 @@ const schema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
+  BINANCE_SANDBOX: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
 });
 
 const parsed = schema.safeParse(process.env);

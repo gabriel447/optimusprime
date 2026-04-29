@@ -13,12 +13,13 @@ export class BinanceClient {
       enableRateLimit: true,
       options: { defaultType: 'spot' },
     });
-    this.exchange.setSandboxMode(true);
+    this.exchange.setSandboxMode(env.BINANCE_SANDBOX);
   }
 
   async init(): Promise<void> {
     await this.withRetry('loadMarkets', () => this.exchange.loadMarkets());
-    logger.info('exchange', `Binance Testnet conectada (${env.SYMBOL} @ ${env.TIMEFRAME})`);
+    const target = env.BINANCE_SANDBOX ? 'Testnet' : 'PRODUÇÃO';
+    logger.info('exchange', `Binance ${target} conectada (${env.SYMBOL} @ ${env.TIMEFRAME})`);
   }
 
   async fetchCandles(limit = env.CANDLE_HISTORY_SIZE): Promise<Candle[]> {
