@@ -10,10 +10,14 @@ const { status, connected } = storeToRefs(bot);
   <header class="app-header">
     <div class="title">
       <h1>OptimusPrime</h1>
-      <span class="subtitle">Price Action Bot · método Lorenz</span>
+      <span class="subtitle">Price Action Bot</span>
     </div>
 
     <div class="status-pills">
+      <span class="pill" :class="status.dryRun ? 'amber' : 'green'">
+        <span class="led" :class="status.dryRun ? 'led-amber' : 'led-green'" />
+        {{ status.dryRun ? 'DRY RUN' : 'LIVE' }}
+      </span>
       <span class="pill" :class="connected ? 'green' : 'red'">
         <span class="led" :class="[connected ? 'led-green' : 'led-red', { pulse: connected }]" />
         {{ connected ? 'conectado' : 'desconectado' }}
@@ -21,10 +25,6 @@ const { status, connected } = storeToRefs(bot);
       <span class="pill" :class="status.running ? 'green' : 'red'">
         <span class="led" :class="status.running ? 'led-green' : 'led-red'" />
         {{ status.running ? 'bot rodando' : 'bot parado' }}
-      </span>
-      <span class="pill" :class="status.dryRun ? 'amber' : 'green'">
-        <span class="led" :class="status.dryRun ? 'led-amber' : 'led-green'" />
-        {{ status.dryRun ? 'DRY RUN' : 'LIVE' }}
       </span>
     </div>
   </header>

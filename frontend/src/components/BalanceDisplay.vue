@@ -27,14 +27,12 @@ const title = computed(() => (status.value.dryRun ? 'Saldo (DRY RUN)' : 'Saldo (
     <div class="table-wrap">
       <table v-if="balances.length">
         <thead>
-          <tr><th>Ativo</th><th>Livre</th><th>Em ordem</th><th>Total</th></tr>
+          <tr><th>Ativo</th><th>Total</th></tr>
         </thead>
 
         <tbody v-if="status.dryRun">
           <tr v-for="b in balances" :key="b.asset">
             <td><strong>{{ b.asset }}</strong></td>
-            <td><span class="muted">∞</span></td>
-            <td>0</td>
             <td v-if="b.asset === quoteAsset">
               <strong :class="pnlAllTime >= 0 ? 'pos' : 'neg'">
                 {{ fmtSigned(pnlAllTime) }}
@@ -47,8 +45,6 @@ const title = computed(() => (status.value.dryRun ? 'Saldo (DRY RUN)' : 'Saldo (
         <tbody v-else>
           <tr v-for="b in balances" :key="b.asset">
             <td><strong>{{ b.asset }}</strong></td>
-            <td>{{ fmt(b.free) }}</td>
-            <td>{{ fmt(b.used) }}</td>
             <td><strong>{{ fmt(b.total) }}</strong></td>
           </tr>
         </tbody>

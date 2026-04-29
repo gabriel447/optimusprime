@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import { useNow } from '../composables/useNow';
 import { useBotStore } from '../stores/bot';
 import Sparkline from './Sparkline.vue';
 
 const bot = useBotStore();
-const { price, status, candles, lastPriceAt } = storeToRefs(bot);
-const now = useNow(1000);
+const { price, status, candles } = storeToRefs(bot);
 
 const formattedPrice = computed(() =>
   price.value > 0
@@ -18,15 +16,6 @@ const formattedPrice = computed(() =>
 const quoteAsset = computed(() => status.value.symbol.split('/')[1] ?? '');
 
 const sparkValues = computed(() => candles.value.slice(-30).map((c) => c.close));
-
-const lastUpdatedLabel = computed(() => {
-  if (!lastPriceAt.value) return 'aguardando…';
-  const seconds = Math.floor((now.value - lastPriceAt.value) / 1000);
-  if (seconds < 2) return 'agora';
-  if (seconds < 60) return `há ${seconds}s`;
-  if (seconds < 3600) return `há ${Math.floor(seconds / 60)}m`;
-  return `há ${Math.floor(seconds / 3600)}h`;
-});
 </script>
 
 <template>
@@ -36,10 +25,6 @@ const lastUpdatedLabel = computed(() => {
         <span class="eyebrow">Preço atual</span>
         <span class="symbol">{{ status.symbol }} · {{ status.timeframe }}</span>
       </div>
-      <span class="updated">
-        <span class="led led-green pulse" />
-        atualizado <strong>{{ lastUpdatedLabel }}</strong>
-      </span>
     </header>
 
     <div class="hero">

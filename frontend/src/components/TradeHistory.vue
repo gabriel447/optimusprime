@@ -54,13 +54,17 @@ const fmtDuration = (t: { openedAt: number; closedAt?: number | null }) =>
               <span class="dir" :class="t.direction">{{ t.direction === 'buy' ? '↑' : '↓' }}</span>
             </td>
             <td>
-              <span v-if="t.status === 'open'" class="pill gray">aberta</span>
+              <span v-if="t.status === 'open'" class="pill yellow">aberta</span>
               <span v-else-if="t.outcome === 'target'" class="pill green">alvo</span>
               <span v-else class="pill red">stop</span>
             </td>
-            <td class="ts">{{ fmtDuration(t) }}</td>
+            <td class="ts">
+              <span v-if="t.status === 'open'" class="waiting">Aguarde…</span>
+              <template v-else>{{ fmtDuration(t) }}</template>
+            </td>
             <td class="num" :class="pnlClass(t.pnlUsdt)">
-              <strong>{{ fmtPnL(t.pnlUsdt) }}</strong>
+              <span v-if="t.status === 'open'" class="waiting">Aguarde…</span>
+              <strong v-else>{{ fmtPnL(t.pnlUsdt) }}</strong>
             </td>
           </tr>
         </tbody>
@@ -123,4 +127,11 @@ tbody td { padding: 10px; }
 
 .pos { color: #57d28c; }
 .neg { color: #ff7a7a; }
+
+.waiting {
+  color: #5a637e;
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 400;
+}
 </style>

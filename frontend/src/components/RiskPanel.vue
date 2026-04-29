@@ -4,12 +4,11 @@ import { computed } from 'vue';
 import { useTradesStore } from '../stores/trades';
 
 const trades = useTradesStore();
-const { stats, pnlToday, pnlAllTime } = storeToRefs(trades);
+const { stats, pnlAllTime } = storeToRefs(trades);
 
 const fmt = (v: number) => (v >= 0 ? '+' : '') + v.toFixed(2);
 const fmtPct = (v: number) => (v * 100).toFixed(0) + '%';
 
-const pnlTodayClass = computed(() => pnlToday.value >= 0 ? 'pos' : 'neg');
 const pnlAllClass = computed(() => pnlAllTime.value >= 0 ? 'pos' : 'neg');
 </script>
 
@@ -19,12 +18,7 @@ const pnlAllClass = computed(() => pnlAllTime.value >= 0 ? 'pos' : 'neg');
 
     <div class="risk-grid">
       <div class="metric">
-        <div class="metric-label">P&amp;L hoje</div>
-        <div class="metric-value" :class="pnlTodayClass">{{ fmt(pnlToday) }} <span class="unit">USDT</span></div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-label">P&amp;L acumulado</div>
+        <div class="metric-label">Total</div>
         <div class="metric-value" :class="pnlAllClass">{{ fmt(pnlAllTime) }} <span class="unit">USDT</span></div>
       </div>
 
@@ -41,11 +35,13 @@ const pnlAllClass = computed(() => pnlAllTime.value >= 0 ? 'pos' : 'neg');
       </div>
 
       <div class="metric">
-        <div class="metric-label">Melhor / pior</div>
-        <div class="metric-value small">
-          <span class="pos">{{ fmt(stats.bestTrade) }}</span> /
-          <span class="neg">{{ fmt(stats.worstTrade) }}</span>
-        </div>
+        <div class="metric-label">Melhor</div>
+        <div class="metric-value pos">{{ fmt(stats.bestTrade) }} <span class="unit">USDT</span></div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Pior</div>
+        <div class="metric-value neg">{{ fmt(stats.worstTrade) }} <span class="unit">USDT</span></div>
       </div>
     </div>
   </section>
