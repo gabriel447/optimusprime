@@ -31,14 +31,13 @@ const title = computed(() => (status.value.dryRun ? 'Saldo (DRY RUN)' : 'Saldo (
         </thead>
 
         <tbody v-if="status.dryRun">
-          <tr v-for="b in balances" :key="b.asset">
-            <td><strong>{{ b.asset }}</strong></td>
-            <td v-if="b.asset === quoteAsset">
+          <tr>
+            <td><strong>{{ quoteAsset }}</strong></td>
+            <td>
               <strong :class="pnlAllTime >= 0 ? 'pos' : 'neg'">
                 {{ fmtSigned(pnlAllTime) }}
               </strong>
             </td>
-            <td v-else>0</td>
           </tr>
         </tbody>
 
